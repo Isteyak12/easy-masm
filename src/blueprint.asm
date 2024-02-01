@@ -1,9 +1,8 @@
-TITLE
+TITLE   Program Template
 
-; Name: 
-; Date: 
-; ID: 
-; Description: 
+;Program Description
+;Author 
+;Creation Date
 
 INCLUDE Irvine32.inc
 INCLUDELIB Irvine32.lib
@@ -13,17 +12,14 @@ INCLUDELIB kernel32.lib
 INCLUDELIB user32.lib
 
 .data
-    
-	; data declarations go here
 
 .code
-main PROC
-	
-	; code goes here
-	mov eax, 0
-	call DumpRegs ; displays registers in console
-
-	exit
-
+main    PROC
+    mov  eax, 10000h
+    add  eax, 40000h
+    sub  eax, 20000h
+    call DumpRegs
+    exit
+    
 main ENDP
-END main
+END  main
