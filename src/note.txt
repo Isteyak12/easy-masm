@@ -1,3 +1,0 @@
-eax is 32bit int reg
-
-ax is 16 bit 
