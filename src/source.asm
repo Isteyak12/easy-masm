@@ -9,7 +9,7 @@ INCLUDELIB user32.lib
           promptSizeMsg   BYTE "What is the size N of Vector? > ", 0
           promptValuesMsg BYTE "What are the ", 0
           valuesMsgEnd    BYTE " values in Vector? > ", 0
-          vector          SDWORD 50 DUP(?)                                    ; Reserve space for 50 SDWORD integers
+          vector          SDWORD 50 DUP(?)                                                                              ; Reserve space for 50 SDWORD integers
           vectorSize      DWORD ?
 
           WR1             BYTE "The sum of negative values: ", 0
@@ -18,9 +18,12 @@ INCLUDELIB user32.lib
           PositiveCount   DWORD 0
          
      ;  range sum
-          I               DWORD 2                                             ; Start index (2nd element, considering 1-based indexing)
-          J               DWORD 7                                             ; End index (7th element)
+              promptI         BYTE "Enter the start index I (1-based): ", 0
+         promptJ         BYTE "Enter the end index J (1-based): ", 0
+          I               DWORD ?                                                                                       ; Start index (2nd element, considering 1-based indexing)
+          J               DWORD ?                                                                                       ; End index (7th element)
           Minimum         SDWORD ?
+          inputErrorMsg   BYTE "Invalid input. I must be <= J and both must be within the vector size.", 0dh,0ah, 0
     
      ;palinindrome check
           IsPalindrome    BYTE "The array is a palindrome.",0dh,0ah,0
@@ -141,117 +144,10 @@ main PROC
                            mov  eax, NegativeSum
                            call WriteInt                           ; Irvine32 procedure to print the integer
                            call Crlf                               ; New line
-     ; no of positive values
+     
      ; <<<<<<<<<<<<<<<<here we go again>>>>>>>>>>>>>>>>>>>>>>>>>
-                           varI DWORD 2 - 1                        ; Adjusting for 0-based indexing
-                           varJ DWORD 7 - 1                        ; Adjusting for 0-based indexing
-                           M    SDWORD ?
-
-                           mov  esi, OFFSET Vector                 ; ESI points to the start of the array
-                           mov  ecx, varJ                          ; ECX is the loop counter, starting from J
-                           sub  ecx, varI
-                           mov  ebx, varI                          ; Adjust loop counter for the range I to J
-                           lea  esi, [esi + ebx*4]                 ; Adjust ESI to point to the first element in the range
-                           mov  eax, [esi]                         ; Move the first element of the range into EAX
-                           mov  M, eax                             ; Assume the first element is the minimum
-
-     find_min:             
-                           add  esi, TYPE Vector                   ; Move to the next element in the range
-                           mov  edx, [esi]                         ; Load the current element into EDX
-                           cmp  eax, edx                           ; Compare EAX (current minimum) with EDX (current element)
-                           jle  next_element                       ; If EAX <= EDX, move to the next element
-                           mov  eax, edx                           ; If EDX < EAX, EDX is the new minimum
-                           mov  M, eax                             ; Store the new minimum
-
-     next_element:         
-                           loop find_min                           ; Loop until ECX is 0
-
-     ; Print the resultF
-                           mov  eax, Minimum
-                           call WriteInt                           ; Print the minimum value
-                           call Crlf
-     ;  exit
-
-
-     ; Analysis Phase: Count positive numbers and sum negative numbers
-                           mov  ecx, vectorSize                    ; Set loop counter to the size of the array
-                           mov  esi, OFFSET vector                 ; Point ESI to the start of the vector
-                           xor  eax, eax                           ; Clear EAX for use in loop
-                           xor  ebx, ebx                           ; Clear EBX to accumulate negative sum
-                           xor  edx, edx                           ; Clear EDX to count positives
-
-     CountAndSumLoop:      
-                           test ecx, ecx                           ; Test if loop counter is 0
-                           jz   FinishedAnalysis                   ; If 0, all elements have been processed
-
-                           mov  eax, [esi]                         ; Load current element into EAX
-                           add  esi, TYPE vector                   ; Move to the next element in the array
-
-                           cmp  eax, 0                             ; Compare current element with 0
-                           jg   PositiveNumber                     ; If greater than 0, handle positive number
-                           jl   NegativeNumber                     ; If less than 0, handle negative number
-                           jmp  SkipElement                        ; If 0, neither positive nor negative, skip
-
-     PositiveNumber:       
-                           inc  edx                                ; Increment positive count
-                           jmp  SkipElement
-
-     NegativeNumber:       
-                           add  ebx, eax                           ; Add current element to negative sum
-
-     SkipElement:          
-                           dec  ecx                                ; Decrement loop counter
-                           jmp  CountAndSumLoop                    ; Loop back
-
-     FinishedAnalysis:     
-     ; New line
-                           mov  eax, ebx                           ; Move negative sum to EAX
-     ;  mov     edx, OFFSET WR1                          ; Move positive count to EAX
-     ;  call    WriteString                       ; Print negative sum
-                           call WriteInt                           ; Print negative sum
-                           call Crlf
-
-     ; Now EAX can be used to display results
-                           mov  eax, edx
-                           mov  edx, OFFSET WR2
-                           call WriteString                        ; Print negative sum    ; Move positive count to EAX
-                           call WriteInt                           ; Print positive count
-                           call Crlf
-     ; For finding the minimum value between I and J
-     ; Assume I and J are given and valid, and Vector is already filled with values.
-     ; ... [previous code] ...
-
-     ; Find the minimum value between I and J
-     ; Ensure I and J are within bounds and I is less than J
-                           mov  ebx, I
-                           dec  ebx                                ; Adjust for zero-based indexing
-                           mov  ecx, J
-                           dec  ecx                                ; Adjust for zero-based indexing
-                           mov  esi, OFFSET vector                 ; ESI points to the start of the Vector
-                           lea  esi, [esi + ebx*4]                 ; ESI now points to the Ith element
-                           mov  eax, [esi]                         ; Load Ith element as the current minimum
-                           mov  Minimum, eax                       ; Store as the current minimum
-
-     ; Check remaining values from I+1 to J to find the minimum
-                           inc  ebx                                ; Move to the next element after I
-     while_loop:           
-                           cmp  ebx, ecx                           ; Compare current index with J
-                           ja   end_while                          ; If beyond J, exit loop
-                           lea  esi, [vector + ebx*4]              ; Point ESI to the current element
-                           mov  eax, [esi]                         ; Load current element
-                           cmp  eax, Minimum                       ; Compare current element with the current minimum
-                           jge  increment_index                    ; If greater or equal, skip
-                           mov  Minimum, eax                       ; Update minimum
-     increment_index:      
-                           inc  ebx                                ; Increment index
-                           jmp  while_loop                         ; Continue loop
-     end_while:            
-
-     ; Output the minimum value
-                           mov  eax, Minimum
-                           call WriteInt
-                           call Crlf
-
+     ; <<<<<<<<<<<<<<<<range sum>>>>>>>>>>>>>>>>>>>>>>>>>
+     ; <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
      ; Palindrome check
                            mov  esi, OFFSET vector                 ; ESI points to the start of the Vector
                            mov  edi, OFFSET vector                 ; EDI also points to the start of the Vector
