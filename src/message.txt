@@ -1,0 +1,208 @@
+TITLE: Ass2-Q1.asm
+
+; Name: Parmida Khashayar
+; Date: 20/02/2024
+; ID: 110095800
+; Description: operations on an array
+
+INCLUDE Irvine32.inc
+INCLUDELIB Irvine32.lib
+
+.data
+    vector DWORD 50 DUP(?)   ; array 
+    size DWORD ?              ; size of the vector
+    sumNeg DWORD ?            ; sum of negative numbers
+    countPos DWORD ?          ; count of positive numbers
+    i DWORD ?                 ; index I
+    j DWORD ?                 ; index J
+    minVal DWORD ?            ; minimum value between positions I and J
+    palindrome BYTE "Vector is a palindrome because it reads the same way in both directions.", 0
+    notPalindrome BYTE "Vector is NOT a palindrome.", 0
+    inputPrompt BYTE "What is the size N of Vector? >", 0
+    valuesPrompt BYTE "What are the %d values in Vector? >", 0
+    sumNegOutput BYTE "The sum of all the negative values in Vector is: Sum = %d", 0
+    countPosOutput BYTE "The number of all the positive values in Vector is: Count = %d", 0
+    minValOutput BYTE "The minimum value between position %d and %d of Vector is: Minimum = %d", 0
+    invalidIorJ BYTE "Invalid I or J", 0
+    repeatPrompt BYTE "Repeat with a new Vector of different size and/or content? (Y/N) >", 0
+
+.code
+main PROC
+
+    ; Initialize the sum of negative values and count of positive values
+    mov sumNeg, 0
+    mov countPos, 0
+
+    ; Prompt for the size of Vector
+    mov edx, OFFSET inputPrompt
+    call WriteString
+    call ReadInt
+    mov size, eax
+
+    ; Check if size is negative
+    cmp size, 0
+    jl sizeNegative
+
+    ; Check if size exceeds 50
+    cmp size, 50
+    jg sizeExceeded
+
+    ; Prompt for values in Vector
+    mov ecx, size
+    mov esi, OFFSET vector
+    mov edx, OFFSET valuesPrompt
+    call WriteString
+    L1:
+        call ReadInt
+        mov [esi], eax
+        cmp eax, 0
+        jge notNegative
+        add sumNeg, eax
+        jmp nextValue
+
+        notNegative:
+            inc countPos
+        nextValue:
+            add esi, TYPE DWORD
+        loop L1
+
+    ; Display size of Vector
+    mov edx, OFFSET sizePrompt
+    call WriteString
+    mov eax, size
+    call WriteDec
+    call Crlf
+
+    ; Vector
+    mov edx, OFFSET vectorPrompt
+    call WriteString
+    mov ecx, size
+    mov esi, OFFSET vector
+    call WriteIntegers
+    call Crlf
+
+    ; sum of negative values
+    mov edx, OFFSET sumNegOutput
+    mov eax, sumNeg
+    call WriteDec
+    call Crlf
+
+    ; count of positive values
+    mov edx, OFFSET countPosOutput
+    mov eax, countPos
+    call WriteDec
+    call Crlf
+
+    ; Prompt for I and J
+    mov edx, OFFSET ijPrompt
+    call WriteString
+    call ReadInt
+    mov i, eax
+    call ReadInt
+    mov j, eax
+
+    ; if I or J are invalid
+    cmp i, 1
+    jl invalidIorJ
+    cmp j, 1
+    jl invalidIorJ
+    cmp i, size
+    jg invalidIorJ
+    cmp j, size
+    jg invalidIorJ
+    cmp i, j
+    jg invalidIorJ
+
+    ; Find minimum value between positions I and J
+    mov ecx, i
+    dec ecx
+    mov eax, [vector + ecx * 4]   ; Initialize minimum value
+    mov edx, ecx
+    L2:
+        inc edx
+        cmp edx, j
+        jg minValFound
+        mov ebx, [vector + edx * 4]
+        cmp ebx, eax
+        jl updateMinVal
+        jmp L2
+    minValFound:
+    mov minVal, eax
+    jmp minValOutput
+    updateMinVal:
+    mov eax, ebx
+    jmp L2
+    minValOutput:
+    mov edx, OFFSET minValOutput
+    mov eax, i
+    call WriteDec
+    mov edx, OFFSET separator
+    call WriteString
+    mov eax, j
+    call WriteDec
+    mov edx, OFFSET separator
+    call WriteString
+    mov eax, minVal
+    call WriteDec
+    call Crlf
+
+    ; if palindrome
+    mov ecx, size
+    dec ecx
+    mov ebx, 0
+    mov edi, OFFSET vector
+    mov esi, OFFSET vector
+    add esi, ecx
+    shr ecx, 1
+    L3:
+        cmp ebx, ecx
+        jge palindromeFound
+        mov al, [esi]
+        cmp al, [edi]
+        jne notPalindrome
+        inc ebx
+        inc edi
+        dec esi
+        jmp L3
+    palindromeFound:
+    mov edx, OFFSET palindrome
+    call WriteString
+    jmp endProgram
+    notPalindrome:
+    mov edx, OFFSET notPalindrome
+    call WriteString
+
+    endProgram:
+    ; Prompt for repeating the program
+    mov edx, OFFSET repeatPrompt
+    call WriteString
+    call ReadString
+    mov al, byte ptr [esi]
+    cmp al, 'Y'
+    je main
+
+    ; Exit the program
+    jmp exitProgram
+
+    ; Error messages
+
+    sizeNegative:
+    mov edx, OFFSET sizeNegativeMsg
+    call WriteString
+    jmp endProgram
+
+    sizeExceeded:
+    mov edx, OFFSET sizeExceededMsg
+    call WriteString
+    jmp endProgram
+
+    invalidIorJ:
+    mov edx, OFFSET invalidIorJ
+    call WriteString
+    jmp endProgram
+
+exitProgram:
+    exit
+
+main ENDP
+END main

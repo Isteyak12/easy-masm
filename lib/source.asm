@@ -115,7 +115,7 @@ main PROC
                            call WriteInt
                            call Crlf
 
-     ; >>>>>>>>>>>>>>>>>>>>>>>>>neg sum>>>>>>>>>>>>>>>>>>>>>>>>>..
+     ; >>>>>>>>>>>>>>>>>>>>>>>>>>>
                            mov  eax, 0
                            mov  esi, OFFSET Vector                 ; ESI points to the start of the Vector
                            mov  ecx, VectorSize
