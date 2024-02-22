@@ -24,6 +24,7 @@ main PROC
     ; Ensure the size does not exceed the maximum allowed (50)
                     cmp  vectorSize, 50
                     jle  validSize
+                    mov  vectorSize, 50
 
     validSize:      
     ; Print part of the prompt for values
@@ -43,11 +44,9 @@ main PROC
     readVectorLoop: 
                     test ecx, ecx                          ; Check if we've read all values
                     jz   finishedReading                   ; If yes, jump to the end of reading loop
-                    
                     call ReadInt                           ; Read a value from the user
                     mov  vector[esi * TYPE vector], eax    ; Store the value in the vector
                     add  esi, 1                            ; Increment the index for the next value
-                    
                     loop readVectorLoop
 
     ; Now, print the entire vector
@@ -57,19 +56,16 @@ main PROC
     printVectorLoop:
                     test ecx, ecx
                     jz   done                              ; If all elements have been printed, we're done
-                   
                     mov  eax, vector[esi * TYPE vector]    ; Load the current value into EAX
                     call WriteInt                          ; Print the value
                     mov  al, ' '                           ; Load space character into AL
                     call WriteChar                         ; Print a space
-                    
                     add  esi, 1                            ; Move to the next index
                     loop printVectorLoop
 
     done:           
                     call Crlf                              ; Print a new line at the end
-                    
-            
+
                     exit
 main ENDP
 

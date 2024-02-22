@@ -5,42 +5,73 @@ INCLUDELIB Irvine32.lib
 INCLUDELIB kernel32.lib
 INCLUDELIB user32.lib
 
-
 .data
-Vector SDWORD -1, 3, 17, 0, -100, -30, 2, -30, -100, 0, 17, 3, -1
-VectorSize DWORD 13
-NegativeSum SDWORD 0
+         promptSizeMsg   BYTE "What is the size N of Vector? > ", 0
+         promptValuesMsg BYTE "What are the ", 0
+         valuesMsgEnd    BYTE " values in Vector? > ", 0
+         vector          SDWORD 50 DUP(?)                              ; Reserve space for 50 SDWORD integers
+         vectorSize      DWORD ?
+         inputBuffer     BYTE 11 DUP(0)                                ; Buffer for converting integers to string
 
 .code
 main PROC
-    ; Initialize registers
-    mov esi, OFFSET Vector    ; ESI points to the start of the Vector
-    mov ecx, VectorSize       ; ECX is the loop counter, set to the size of the Vector
-    mov eax, 0                ; Clear EAX, will be used to sum negative values
+    ; Prompt for the size of the vector
+                    mov  edx, OFFSET promptSizeMsg
+                    call WriteString
+                    call ReadInt                           ; Read the size into EAX
+                    mov  vectorSize, eax                   ; Store the size in vectorSize
 
-loop_start:
-    ; Check if the current value pointed by ESI is negative
-    mov edx, [esi]            ; Move the current element into EDX
-    cmp edx, 0                ; Compare the value with 0
-    jge not_negative          ; If the value is greater than or equal to 0, jump to not_negative
+    ; Ensure the size does not exceed the maximum allowed (50)
+                    cmp  vectorSize, 50
+                    jle  validSize
 
-    ; If the value is negative, add it to the sum
-    add eax, edx              ; Add the negative value to EAX
+    validSize:      
+    ; Print part of the prompt for values
+                    mov  edx, OFFSET promptValuesMsg
+                    call WriteString
+    ; Convert vectorSize to string and print
+                    mov  eax, vectorSize
+                    call WriteDec
+    ; Print the rest of the prompt for values
+                    mov  edx, OFFSET valuesMsgEnd
+                    call WriteString
 
-not_negative:
-    add esi, 4                ; Move ESI to the next element (SDWORD is 4 bytes)
-    loop loop_start           ; Decrease ECX and loop if not zero
+    ; Loop to read vector values
+                    mov  ecx, vectorSize                   ; ECX will serve as our loop counter
+                    mov  esi, 0                            ; ESI will serve as the index for storing values in the vector
 
-    ; Store the sum of negative numbers
-    mov NegativeSum, eax      ; Store the result in NegativeSum
+    readVectorLoop: 
+                    test ecx, ecx                          ; Check if we've read all values
+                    jz   finishedReading                   ; If yes, jump to the end of reading loop
+                    
+                    call ReadInt                           ; Read a value from the user
+                    mov  vector[esi * TYPE vector], eax    ; Store the value in the vector
+                    add  esi, 1                            ; Increment the index for the next value
+                    
+                    loop readVectorLoop
 
-    ; For demonstration, let's print the sum
-    mov eax, NegativeSum
-    call WriteInt             ; Irvine32 procedure to print the integer
-    call Crlf                 ; New line
-    ; no of positive values
+    ; Now, print the entire vector
+    finishedReading:
+                    mov  ecx, vectorSize                   ; Set up the counter for printing loop
+                    mov  esi, 0                            ; Reset the index for accessing vector values
+    printVectorLoop:
+                    test ecx, ecx
+                    jz   done                              ; If all elements have been printed, we're done
+                   
+                    mov  eax, vector[esi * TYPE vector]    ; Load the current value into EAX
+                    call WriteInt                          ; Print the value
+                    mov  al, ' '                           ; Load space character into AL
+                    call WriteChar                         ; Print a space
+                    
+                    add  esi, 1                            ; Move to the next index
+                    loop printVectorLoop
+
+    done:           
+                    call Crlf                              ; Print a new line at the end
     
-    exit
-main ENDP
+                    
+                    exit
 
+
+main ENDP
 END main
